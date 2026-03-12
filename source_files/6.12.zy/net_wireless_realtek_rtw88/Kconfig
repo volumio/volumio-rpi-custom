@@ -1,0 +1,245 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menuconfig RTW88
+	tristate "Realtek 802.11ac wireless chips support"
+	depends on MAC80211
+	help
+	  This module adds support for mac80211-based wireless drivers that
+	  enables Realtek IEEE 802.11ac wireless chipsets.
+
+	  If you choose to build a module, it'll be called rtw88.
+
+if RTW88
+
+config RTW88_CORE
+	tristate
+	select WANT_DEV_COREDUMP
+	default m
+
+config RTW88_PCI
+	tristate
+	default n if ARM
+
+config RTW88_SDIO
+	tristate
+	default m
+
+config RTW88_USB
+	tristate
+	default m
+
+config RTW88_8822B
+	tristate
+	default m
+
+config RTW88_8822C
+	tristate
+	default m
+
+config RTW88_8723X
+	tristate
+	default m
+
+config RTW88_8703B
+	tristate
+	select RTW88_8723X
+	default m
+
+config RTW88_8723D
+	tristate
+	select RTW88_8723X
+	default m
+
+config RTW88_8821C
+	tristate
+	default m
+
+config RTW88_8822BE
+	tristate "Realtek 8822BE PCI wireless network adapter"
+	depends on PCI
+	select RTW88_CORE
+	select RTW88_PCI
+	select RTW88_8822B
+	default n if ARM
+	help
+	  Support for Realtek 8822BE PCIe 802.11ac wireless chipset.
+
+config RTW88_8822BS
+	tristate "Realtek 8822BS SDIO wireless network adapter"
+	depends on MMC
+	select RTW88_CORE
+	select RTW88_SDIO
+	select RTW88_8822B
+	default m
+	help
+	  Support for Realtek 8822BS SDIO 802.11ac wireless chipset.
+
+config RTW88_8822BU
+	tristate "Realtek 8822BU USB wireless network adapter"
+	depends on USB
+	select RTW88_CORE
+	select RTW88_USB
+	select RTW88_8822B
+	default m
+	help
+	  Support for Realtek 8822BU USB 802.11ac wireless chipset.
+
+config RTW88_8822CE
+	tristate "Realtek 8822CE PCI wireless network adapter"
+	depends on PCI
+	select RTW88_CORE
+	select RTW88_PCI
+	select RTW88_8822C
+	default n if ARM
+	help
+	  Support for Realtek 8822CE PCIe 802.11ac wireless chipset.
+
+config RTW88_8822CS
+	tristate "Realtek 8822CS SDIO wireless network adapter"
+	depends on MMC
+	select RTW88_CORE
+	select RTW88_SDIO
+	select RTW88_8822C
+	default m
+	help
+	  Support for Realtek 8822CS SDIO 802.11ac wireless chipset.
+
+config RTW88_8822CU
+	tristate "Realtek 8822CU USB wireless network adapter"
+	depends on USB
+	select RTW88_CORE
+	select RTW88_USB
+	select RTW88_8822C
+	default m
+	help
+	  Support for Realtek 8822CU USB 802.11ac wireless chipset.
+
+config RTW88_8723DE
+	tristate "Realtek 8723DE PCI wireless network adapter"
+	depends on PCI
+	select RTW88_CORE
+	select RTW88_PCI
+	select RTW88_8723D
+	default n if ARM
+	help
+	  Support for Realtek 8723DE PCIe 802.11n wireless chipset.
+
+config RTW88_8723DS
+	tristate "Realtek 8723DS SDIO wireless network adapter"
+	depends on MMC
+	select RTW88_CORE
+	select RTW88_SDIO
+	select RTW88_8723D
+	default m
+	help
+	  Support for Realtek 8723DS SDIO 802.11n wireless chipset.
+
+config RTW88_8723CS
+	tristate "Realtek 8723CS SDIO wireless network adapter"
+	depends on MMC
+	select RTW88_CORE
+	select RTW88_SDIO
+	select RTW88_8703B
+	default m
+	help
+	  Support for Realtek 8723CS SDIO 802.11n wireless chipset.
+
+config RTW88_8723DU
+	tristate "Realtek 8723DU USB wireless network adapter"
+	depends on USB
+	select RTW88_CORE
+	select RTW88_USB
+	select RTW88_8723D
+	default m
+	help
+	  Support for Realtek 8723DU USB 802.11n wireless chipset.
+
+config RTW88_8821CE
+	tristate "Realtek 8821CE PCI wireless network adapter"
+	depends on PCI
+	select RTW88_CORE
+	select RTW88_PCI
+	select RTW88_8821C
+	default n if ARM
+	help
+	  Support for Realtek 8821CE PCIe 802.11ac wireless chipset.
+
+config RTW88_8821CS
+	tristate "Realtek 8821CS SDIO wireless network adapter"
+	depends on MMC
+	select RTW88_CORE
+	select RTW88_SDIO
+	select RTW88_8821C
+	default m
+	help
+	  Support for Realtek 8821CS SDIO 802.11ac wireless chipset.
+
+config RTW88_8821CU
+	tristate "Realtek 8821CU USB wireless network adapter"
+	depends on USB
+	select RTW88_CORE
+	select RTW88_USB
+	select RTW88_8821C
+	default m
+	help
+	  Support for Realtek 8821CU USB 802.11ac wireless chipset.
+
+# New chipsets from upstream rtw88
+
+config RTW88_8812A
+	tristate "Realtek 8812A support"
+	select RTW88_CORE
+	default m
+
+config RTW88_8812AU
+	tristate "Realtek 8812AU USB support"
+	select RTW88_CORE
+	select RTW88_USB
+	default m
+
+config RTW88_8814A
+	tristate "Realtek 8814A support"
+	select RTW88_CORE
+	default m
+
+config RTW88_8814AE
+	tristate "Realtek 8814AE PCI support"
+	select RTW88_CORE
+	select RTW88_PCI
+	default n if ARM
+
+config RTW88_8814AU
+	tristate "Realtek 8814AU USB support"
+	select RTW88_CORE
+	select RTW88_USB
+	default m
+
+config RTW88_8821A
+	tristate "Realtek 8821A support"
+	select RTW88_CORE
+	default m
+
+config RTW88_8821AU
+	tristate "Realtek 8821AU USB support"
+	select RTW88_CORE
+	select RTW88_USB
+	default m
+
+config RTW88_88XXA
+	tristate "Common code for RTW88 881x/882x chipsets"
+	select RTW88_CORE
+	default m
+
+config RTW88_LEDS
+	bool "Enable Realtek LED support"
+	default y
+
+config RTW88_DEBUG
+	bool "Enable debug support"
+	default y
+
+config RTW88_DEBUGFS
+	bool "Enable debugfs for Realtek wireless"
+	depends on DEBUG_FS
+	default y
+
+endif

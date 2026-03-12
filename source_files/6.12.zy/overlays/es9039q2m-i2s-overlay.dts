@@ -1,0 +1,82 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <0xffffffff>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+
+		__overlay__ {
+
+			es9039q2m-codec {
+				compatible = "ti,pcm5102a";
+				#sound-dai-cells = <0x00>;
+				status = "okay";
+				label = "es9039q2m-codec";
+				phandle = <0x02>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xffffffff>;
+
+		__overlay__ {
+			compatible = "simple-audio-card";
+			i2s-controller = <0xffffffff>;
+			status = "okay";
+			simple-audio-card,name = "es9039q2m";
+			simple-audio-card,format = "i2s";
+			simple-audio-card,bitclock-master = <0x01>;
+			simple-audio-card,frame-master = <0x01>;
+
+			simple-audio-card,cpu {
+				sound-dai = <0xffffffff>;
+				dai-tdm-slot-num = <0x02>;
+				dai-tdm-slot-width = <0x20>;
+				system-clock-frequency = <0x2faf080>;
+				phandle = <0x01>;
+			};
+
+			simple-audio-card,codec {
+				sound-dai = <0x02>;
+				sound-name-prefix = "DAC";
+				phandle = <0x03>;
+			};
+		};
+	};
+
+	__symbols__ {
+		es9039q2m_codec = "/fragment@1/__overlay__/es9039q2m-codec";
+		dailink0_master = "/fragment@2/__overlay__/simple-audio-card,cpu";
+		snd_codec = "/fragment@2/__overlay__/simple-audio-card,codec";
+	};
+
+	__fixups__ {
+		i2s_clk_producer = "/fragment@0:target:0\0/fragment@2/__overlay__:i2s-controller:0\0/fragment@2/__overlay__/simple-audio-card,cpu:sound-dai:0";
+		sound = "/fragment@2:target:0";
+	};
+
+	__local_fixups__ {
+
+		fragment@2 {
+
+			__overlay__ {
+				simple-audio-card,bitclock-master = <0x00>;
+				simple-audio-card,frame-master = <0x00>;
+
+				simple-audio-card,codec {
+					sound-dai = <0x00>;
+				};
+			};
+		};
+	};
+};
