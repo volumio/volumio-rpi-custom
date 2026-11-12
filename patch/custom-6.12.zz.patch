@@ -77853,3 +77853,71 @@ index f630ab9b6..e9447685e 100644
  		   QUIRK_FLAG_DSD_RAW),
  	VENDOR_FLG(0x3336, /* HEM devices */
  		   QUIRK_FLAG_DSD_RAW),
+diff --git a/sound/usb/stream.c b/sound/usb/stream.c
+index db2c9ba..9916575 100644
+--- a/sound/usb/stream.c
++++ b/sound/usb/stream.c
+@@ -1112,6 +1112,52 @@ found_clock:
+ 	return fp;
+ }
+ 
++static bool snd_usb_on_dwc2(struct snd_usb_audio *chip)
++{
++	struct device *hc = chip->dev->bus->controller;
++
++	return hc && hc->driver && !strcmp(hc->driver->name, "dwc2");
++}
++
++static void snd_usb_drop_3byte_playback(struct snd_usb_audio *chip, int iface_no)
++{
++	struct snd_usb_stream *as;
++	struct snd_usb_substream *subs;
++	struct audioformat *fp, *n;
++	bool has_s32 = false;
++
++	list_for_each_entry(as, &chip->pcm_list, list) {
++		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
++		if (!subs->num_formats)
++			continue;
++		list_for_each_entry(fp, &subs->fmt_list, list)
++			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S32_LE))
++				has_s32 = true;
++	}
++	if (!has_s32)
++		return;
++
++	list_for_each_entry(as, &chip->pcm_list, list) {
++		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
++		if (!subs->num_formats)
++			continue;
++		subs->formats = 0;
++		list_for_each_entry_safe(fp, n, &subs->fmt_list, list) {
++			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S24_3LE)) {
++				fp->formats &= ~SNDRV_PCM_FMTBIT_S24_3LE;
++				dev_info(&chip->dev->dev, "%u:%d: S24_3LE dropped on dwc2, S32_LE used instead\n",
++					 iface_no, fp->altsetting);
++				if (!fp->formats) {
++					subs->num_formats--;
++					audioformat_free(fp);
++					continue;
++				}
++			}
++			subs->formats |= fp->formats;
++		}
++	}
++}
++
+ static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
+ 					   int iface_no,
+ 					   bool *has_non_pcm, bool non_pcm)
+@@ -1268,6 +1314,10 @@ static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
+ 		if (!set_iface_first)
+ 			usb_set_interface(chip->dev, iface_no, altno);
+ 	}
++
++	if (snd_usb_on_dwc2(chip))
++		snd_usb_drop_3byte_playback(chip, iface_no);
++
+ 	return 0;
+ }
+ 
