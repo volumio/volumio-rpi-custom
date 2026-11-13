@@ -26547,5 +26547,3 @@ u8 array_mp_8821c_fw_spic[] = {
 };
 
 u32 array_length_mp_8821c_fw_spic = 73216;
-
-

@@ -6370,10 +6370,10 @@ index 000000000..adcd51c87
 +#endif /* __LINUX_COMPILER_H */
 diff --git a/drivers/net/wireless/realtek/rtw88/convert_firmware.c b/drivers/net/wireless/realtek/rtw88/convert_firmware.c
 new file mode 100644
-index 000000000..fb1da648b
+index 000000000..c785e6ebf
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw88/convert_firmware.c
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,39 @@
 +/* Program to convert header into a binary file
 + * Coded by Larry Finger
 + * August 2015
@@ -6413,14 +6413,12 @@ index 000000000..fb1da648b
 +
 +	return 0;
 +}
-+
-+
 diff --git a/drivers/net/wireless/realtek/rtw88/convert_firmware.h b/drivers/net/wireless/realtek/rtw88/convert_firmware.h
 new file mode 100644
-index 000000000..e66866bde
+index 000000000..c3256d6b9
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw88/convert_firmware.h
-@@ -0,0 +1,26551 @@
+@@ -0,0 +1,26549 @@
 +/******************************************************************************
 +*
 +* Copyright(c) 2012 - 2017 Realtek Corporation.
@@ -32970,8 +32968,6 @@ index 000000000..e66866bde
 +};
 +
 +u32 array_length_mp_8821c_fw_spic = 73216;
-+
-+
 diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
 index c26a6905f..b67d69b01 100644
 --- a/drivers/net/wireless/realtek/rtw88/debug.c
@@ -34799,7 +34795,7 @@ index 57fe4ece8..f9a6fb71b 100644
  MODULE_DESCRIPTION("Realtek 802.11ac wireless core module");
  MODULE_LICENSE("Dual BSD/GPL");
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index b70b6e624..a05fdd65d 100644
+index b70b6e624..c6ee3d30d 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
 @@ -5,17 +5,105 @@
@@ -35383,7 +35379,7 @@ index b70b6e624..a05fdd65d 100644
  void rtw_core_fw_scan_notify(struct rtw_dev *rtwdev, bool start);
  int rtw_dump_fw(struct rtw_dev *rtwdev, const u32 ocp_src, u32 size,
  		u32 fwcd_item);
-@@ -2215,4 +2431,21 @@ void rtw_update_channel(struct rtw_dev *rtwdev, u8 center_channel,
+@@ -2215,4 +2431,20 @@ void rtw_update_channel(struct rtw_dev *rtwdev, u8 center_channel,
  void rtw_core_port_switch(struct rtw_dev *rtwdev, struct ieee80211_vif *vif);
  bool rtw_core_check_sta_active(struct rtw_dev *rtwdev);
  void rtw_core_enable_beacon(struct rtw_dev *rtwdev, bool enable);
@@ -35401,10 +35397,9 @@ index b70b6e624..a05fdd65d 100644
 +
 +       return true;
 +}
- #endif
-+
 +#endif
 +
+ #endif
 diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
 index fab9bb925..7a6a1844e 100644
 --- a/drivers/net/wireless/realtek/rtw88/pci.c
@@ -76562,7 +76557,7 @@ index 9f0019112..a8a01bfac 100644
  				struct ieee80211_rx_status *rx_status,
  				struct rtw_rx_pkt_stat *pkt_stat);
 diff --git a/drivers/net/wireless/realtek/rtw88/sar.c b/drivers/net/wireless/realtek/rtw88/sar.c
-index c472f1502..5b35cee8a 100644
+index c472f1502..83e76cca1 100644
 --- a/drivers/net/wireless/realtek/rtw88/sar.c
 +++ b/drivers/net/wireless/realtek/rtw88/sar.c
 @@ -2,6 +2,8 @@
@@ -76583,14 +76578,13 @@ index c472f1502..5b35cee8a 100644
  				arg = (struct rtw_sar_arg){
  					.sar_band = idx,
  					.path = j,
-@@ -112,3 +114,5 @@ int rtw_set_sar_specs(struct rtw_dev *rtwdev,
+@@ -112,3 +114,4 @@ int rtw_set_sar_specs(struct rtw_dev *rtwdev,
  
  	return rtw_apply_sar(rtwdev, &new);
  }
 +#endif
-+
 diff --git a/drivers/net/wireless/realtek/rtw88/sar.h b/drivers/net/wireless/realtek/rtw88/sar.h
-index e01e7bb79..75f6118ef 100644
+index e01e7bb79..a2f9b9582 100644
 --- a/drivers/net/wireless/realtek/rtw88/sar.h
 +++ b/drivers/net/wireless/realtek/rtw88/sar.h
 @@ -9,6 +9,7 @@
@@ -76601,12 +76595,11 @@ index e01e7bb79..75f6118ef 100644
  struct rtw_sar_arg {
  	u8 sar_band;
  	u8 path;
-@@ -20,3 +21,5 @@ extern const struct cfg80211_sar_capa rtw_sar_capa;
+@@ -20,3 +21,4 @@ extern const struct cfg80211_sar_capa rtw_sar_capa;
  s8 rtw_query_sar(struct rtw_dev *rtwdev, const struct rtw_sar_arg *arg);
  int rtw_set_sar_specs(struct rtw_dev *rtwdev,
  		      const struct cfg80211_sar_specs *sar);
 +#endif
-+
 diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
 index d8db341a5..bd07c08a9 100644
 --- a/drivers/net/wireless/realtek/rtw88/sdio.c
@@ -76777,10 +76770,10 @@ index d8db341a5..bd07c08a9 100644
  		goto err_release_hw;
 diff --git a/drivers/net/wireless/realtek/rtw88/sdio_ids.h b/drivers/net/wireless/realtek/rtw88/sdio_ids.h
 new file mode 100644
-index 000000000..f1a20d438
+index 000000000..ad161a2b6
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw88/sdio_ids.h
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,10 @@
 +#define SDIO_VENDOR_ID_REALTEK			0x024c
 +#define SDIO_DEVICE_ID_REALTEK_RTW8723BS	0xb723
 +#define SDIO_DEVICE_ID_REALTEK_RTW8723DS_2ANT	0xd723
@@ -76791,7 +76784,6 @@ index 000000000..f1a20d438
 +#define SDIO_DEVICE_ID_REALTEK_RTW8822BS	0xb822
 +#define SDIO_DEVICE_ID_REALTEK_RTW8822CS	0xc822
 +#define SDIO_DEVICE_ID_REALTEK_RTW8723CS	0xb703
-+
 diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
 index dae7ca148..e64881657 100644
 --- a/drivers/net/wireless/realtek/rtw88/tx.c
@@ -77853,3 +77845,71 @@ index f630ab9b6..e9447685e 100644
  		   QUIRK_FLAG_DSD_RAW),
  	VENDOR_FLG(0x3336, /* HEM devices */
  		   QUIRK_FLAG_DSD_RAW),
+diff --git a/sound/usb/stream.c b/sound/usb/stream.c
+index db2c9bac0..99165758c 100644
+--- a/sound/usb/stream.c
++++ b/sound/usb/stream.c
+@@ -1112,6 +1112,52 @@ snd_usb_get_audioformat_uac3(struct snd_usb_audio *chip,
+ 	return fp;
+ }
+ 
++static bool snd_usb_on_dwc2(struct snd_usb_audio *chip)
++{
++	struct device *hc = chip->dev->bus->controller;
++
++	return hc && hc->driver && !strcmp(hc->driver->name, "dwc2");
++}
++
++static void snd_usb_drop_3byte_playback(struct snd_usb_audio *chip, int iface_no)
++{
++	struct snd_usb_stream *as;
++	struct snd_usb_substream *subs;
++	struct audioformat *fp, *n;
++	bool has_s32 = false;
++
++	list_for_each_entry(as, &chip->pcm_list, list) {
++		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
++		if (!subs->num_formats)
++			continue;
++		list_for_each_entry(fp, &subs->fmt_list, list)
++			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S32_LE))
++				has_s32 = true;
++	}
++	if (!has_s32)
++		return;
++
++	list_for_each_entry(as, &chip->pcm_list, list) {
++		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
++		if (!subs->num_formats)
++			continue;
++		subs->formats = 0;
++		list_for_each_entry_safe(fp, n, &subs->fmt_list, list) {
++			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S24_3LE)) {
++				fp->formats &= ~SNDRV_PCM_FMTBIT_S24_3LE;
++				dev_info(&chip->dev->dev, "%u:%d: S24_3LE dropped on dwc2, S32_LE used instead\n",
++					 iface_no, fp->altsetting);
++				if (!fp->formats) {
++					subs->num_formats--;
++					audioformat_free(fp);
++					continue;
++				}
++			}
++			subs->formats |= fp->formats;
++		}
++	}
++}
++
+ static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
+ 					   int iface_no,
+ 					   bool *has_non_pcm, bool non_pcm)
+@@ -1268,6 +1314,10 @@ static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
+ 		if (!set_iface_first)
+ 			usb_set_interface(chip->dev, iface_no, altno);
+ 	}
++
++	if (snd_usb_on_dwc2(chip))
++		snd_usb_drop_3byte_playback(chip, iface_no);
++
+ 	return 0;
+ }
+ 

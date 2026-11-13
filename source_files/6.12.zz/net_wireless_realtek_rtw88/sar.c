@@ -115,4 +115,3 @@ int rtw_set_sar_specs(struct rtw_dev *rtwdev,
 	return rtw_apply_sar(rtwdev, &new);
 }
 #endif
-

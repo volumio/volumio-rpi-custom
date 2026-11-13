@@ -22,4 +22,3 @@ s8 rtw_query_sar(struct rtw_dev *rtwdev, const struct rtw_sar_arg *arg);
 int rtw_set_sar_specs(struct rtw_dev *rtwdev,
 		      const struct cfg80211_sar_specs *sar);
 #endif
-
