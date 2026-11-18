@@ -311,6 +311,8 @@ static int prepare_silent_urb(struct snd_usb_endpoint *ep,
 		memset(urb->transfer_buffer + offs,
 		       ep->silence_value, length);
 		offs += length;
+		if (ep->pkt_align)
+			offs = ALIGN(offs, 4);
 	}
 
 	if (!offs)
@@ -1110,6 +1112,13 @@ static int release_urbs(struct snd_usb_endpoint *ep, bool force)
 	return 0;
 }
 
+static bool snd_usb_on_dwc2(struct snd_usb_audio *chip)
+{
+	struct device *hc = chip->dev->bus->controller;
+
+	return hc && hc->driver && !strcmp(hc->driver->name, "dwc2");
+}
+
 /*
  * configure a data endpoint
  */
@@ -1138,6 +1147,9 @@ static int data_ep_set_params(struct snd_usb_endpoint *ep)
 
 	ep->datainterval = fmt->datainterval;
 	ep->stride = frame_bits >> 3;
+	ep->pkt_align = usb_pipeout(ep->pipe) && !tx_length_quirk &&
+			(ep->stride & 3) && fmt->fmt_type == UAC_FORMAT_TYPE_I &&
+			!fmt->dsd_dop && !fmt->dsd_bitrev && snd_usb_on_dwc2(chip);
 
 	switch (ep->cur_format) {
 	case SNDRV_PCM_FORMAT_U8:
@@ -1260,7 +1272,8 @@ static int data_ep_set_params(struct snd_usb_endpoint *ep)
 		u->index = i;
 		u->ep = ep;
 		u->packets = urb_packs;
-		u->buffer_size = maxsize * u->packets;
+		u->buffer_size = (ep->pkt_align ? ALIGN(maxsize, 4) : maxsize) *
+				 u->packets;
 
 		if (fmt->fmt_type == UAC_FORMAT_TYPE_II)
 			u->packets++; /* for transfer delimiter */

@@ -77600,11 +77600,66 @@ index 86697a5c0..ae0af4fdd 100644
  };
  
  static inline struct rtw_usb_tx_data *rtw_usb_get_tx_data(struct sk_buff *skb)
+diff --git a/sound/usb/card.h b/sound/usb/card.h
+index 6ec95b2..84ad8b9 100644
+--- a/sound/usb/card.h
++++ b/sound/usb/card.h
+@@ -132,6 +132,7 @@ struct snd_usb_endpoint {
+ 	bool need_setup;		/* (re-)need for hw_params? */
+ 	bool need_prepare;		/* (re-)need for prepare? */
+ 	bool fixed_rate;		/* skip rate setup */
++	bool pkt_align;
+ 
+ 	/* for hw constraints */
+ 	const struct audioformat *cur_audiofmt;
 diff --git a/sound/usb/endpoint.c b/sound/usb/endpoint.c
-index cb94c2cad..9ae25f431 100644
+index cb94c2c..ef1d2fd 100644
 --- a/sound/usb/endpoint.c
 +++ b/sound/usb/endpoint.c
-@@ -1514,15 +1514,15 @@ int snd_usb_endpoint_prepare(struct snd_usb_audio *chip,
+@@ -311,6 +311,8 @@ static int prepare_silent_urb(struct snd_usb_endpoint *ep,
+ 		memset(urb->transfer_buffer + offs,
+ 		       ep->silence_value, length);
+ 		offs += length;
++		if (ep->pkt_align)
++			offs = ALIGN(offs, 4);
+ 	}
+ 
+ 	if (!offs)
+@@ -1110,6 +1112,13 @@ static int release_urbs(struct snd_usb_endpoint *ep, bool force)
+ 	return 0;
+ }
+ 
++static bool snd_usb_on_dwc2(struct snd_usb_audio *chip)
++{
++	struct device *hc = chip->dev->bus->controller;
++
++	return hc && hc->driver && !strcmp(hc->driver->name, "dwc2");
++}
++
+ /*
+  * configure a data endpoint
+  */
+@@ -1138,6 +1147,9 @@ static int data_ep_set_params(struct snd_usb_endpoint *ep)
+ 
+ 	ep->datainterval = fmt->datainterval;
+ 	ep->stride = frame_bits >> 3;
++	ep->pkt_align = usb_pipeout(ep->pipe) && !tx_length_quirk &&
++			(ep->stride & 3) && fmt->fmt_type == UAC_FORMAT_TYPE_I &&
++			!fmt->dsd_dop && !fmt->dsd_bitrev && snd_usb_on_dwc2(chip);
+ 
+ 	switch (ep->cur_format) {
+ 	case SNDRV_PCM_FORMAT_U8:
+@@ -1260,7 +1272,8 @@ static int data_ep_set_params(struct snd_usb_endpoint *ep)
+ 		u->index = i;
+ 		u->ep = ep;
+ 		u->packets = urb_packs;
+-		u->buffer_size = maxsize * u->packets;
++		u->buffer_size = (ep->pkt_align ? ALIGN(maxsize, 4) : maxsize) *
++				 u->packets;
+ 
+ 		if (fmt->fmt_type == UAC_FORMAT_TYPE_II)
+ 			u->packets++; /* for transfer delimiter */
+@@ -1514,15 +1527,15 @@ int snd_usb_endpoint_prepare(struct snd_usb_audio *chip,
  			goto unlock;
  	}
  
@@ -77623,8 +77678,39 @@ index cb94c2cad..9ae25f431 100644
  	if (err < 0)
  		goto unlock;
  
+diff --git a/sound/usb/pcm.c b/sound/usb/pcm.c
+index 08bf535..964bf91 100644
+--- a/sound/usb/pcm.c
++++ b/sound/usb/pcm.c
+@@ -1509,6 +1509,10 @@ static int prepare_playback_urb(struct snd_usb_substream *subs,
+ 			break;
+ 		/* set up descriptor */
+ 		urb->iso_frame_desc[i].offset = frames * stride;
++		if (ep->pkt_align && i)
++			urb->iso_frame_desc[i].offset =
++				ALIGN(urb->iso_frame_desc[i - 1].offset +
++				      urb->iso_frame_desc[i - 1].length, 4);
+ 		urb->iso_frame_desc[i].length = counts * stride;
+ 		frames += counts;
+ 		avail -= counts;
+@@ -1561,7 +1565,14 @@ static int prepare_playback_urb(struct snd_usb_substream *subs,
+ 		fill_playback_urb_dsd_bitrev(subs, urb, bytes);
+ 	} else {
+ 		/* usual PCM */
+-		if (!subs->tx_length_quirk)
++		if (ep->pkt_align) {
++			for (i = 0; i < urb->number_of_packets; i++)
++				copy_to_urb(subs, urb,
++					    urb->iso_frame_desc[i].offset, stride,
++					    urb->iso_frame_desc[i].length);
++			bytes = urb->iso_frame_desc[i - 1].offset +
++				urb->iso_frame_desc[i - 1].length;
++		} else if (!subs->tx_length_quirk)
+ 			copy_to_urb(subs, urb, 0, stride, bytes);
+ 		else
+ 			bytes = copy_to_urb_quirk(subs, urb, stride, bytes);
 diff --git a/sound/usb/quirks-table.h b/sound/usb/quirks-table.h
-index 3f8beacca..8f47f29f3 100644
+index 3f8beac..8f47f29 100644
 --- a/sound/usb/quirks-table.h
 +++ b/sound/usb/quirks-table.h
 @@ -390,6 +390,20 @@ YAMAHA_DEVICE(0x105d, NULL),
@@ -77664,7 +77750,7 @@ index 3f8beacca..8f47f29f3 100644
  	USB_DEVICE_VENDOR_SPEC(0x1235, 0x4661),
  	QUIRK_DRIVER_INFO {
 diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
-index f630ab9b6..e9447685e 100644
+index f630ab9..e944768 100644
 --- a/sound/usb/quirks.c
 +++ b/sound/usb/quirks.c
 @@ -2005,7 +2005,16 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
@@ -77845,71 +77931,3 @@ index f630ab9b6..e9447685e 100644
  		   QUIRK_FLAG_DSD_RAW),
  	VENDOR_FLG(0x3336, /* HEM devices */
  		   QUIRK_FLAG_DSD_RAW),
-diff --git a/sound/usb/stream.c b/sound/usb/stream.c
-index db2c9bac0..99165758c 100644
---- a/sound/usb/stream.c
-+++ b/sound/usb/stream.c
-@@ -1112,6 +1112,52 @@ snd_usb_get_audioformat_uac3(struct snd_usb_audio *chip,
- 	return fp;
- }
- 
-+static bool snd_usb_on_dwc2(struct snd_usb_audio *chip)
-+{
-+	struct device *hc = chip->dev->bus->controller;
-+
-+	return hc && hc->driver && !strcmp(hc->driver->name, "dwc2");
-+}
-+
-+static void snd_usb_drop_3byte_playback(struct snd_usb_audio *chip, int iface_no)
-+{
-+	struct snd_usb_stream *as;
-+	struct snd_usb_substream *subs;
-+	struct audioformat *fp, *n;
-+	bool has_s32 = false;
-+
-+	list_for_each_entry(as, &chip->pcm_list, list) {
-+		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
-+		if (!subs->num_formats)
-+			continue;
-+		list_for_each_entry(fp, &subs->fmt_list, list)
-+			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S32_LE))
-+				has_s32 = true;
-+	}
-+	if (!has_s32)
-+		return;
-+
-+	list_for_each_entry(as, &chip->pcm_list, list) {
-+		subs = &as->substream[SNDRV_PCM_STREAM_PLAYBACK];
-+		if (!subs->num_formats)
-+			continue;
-+		subs->formats = 0;
-+		list_for_each_entry_safe(fp, n, &subs->fmt_list, list) {
-+			if (fp->iface == iface_no && (fp->formats & SNDRV_PCM_FMTBIT_S24_3LE)) {
-+				fp->formats &= ~SNDRV_PCM_FMTBIT_S24_3LE;
-+				dev_info(&chip->dev->dev, "%u:%d: S24_3LE dropped on dwc2, S32_LE used instead\n",
-+					 iface_no, fp->altsetting);
-+				if (!fp->formats) {
-+					subs->num_formats--;
-+					audioformat_free(fp);
-+					continue;
-+				}
-+			}
-+			subs->formats |= fp->formats;
-+		}
-+	}
-+}
-+
- static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
- 					   int iface_no,
- 					   bool *has_non_pcm, bool non_pcm)
-@@ -1268,6 +1314,10 @@ static int __snd_usb_parse_audio_interface(struct snd_usb_audio *chip,
- 		if (!set_iface_first)
- 			usb_set_interface(chip->dev, iface_no, altno);
- 	}
-+
-+	if (snd_usb_on_dwc2(chip))
-+		snd_usb_drop_3byte_playback(chip, iface_no);
-+
- 	return 0;
- }
- 
